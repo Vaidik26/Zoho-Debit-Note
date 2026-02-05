@@ -97,6 +97,15 @@ def main():
             help="Maximum working days for interest calculation"
         )
         
+        opening_balance_days = st.number_input(
+            "Opening Balance Days",
+            min_value=0,
+            max_value=1000,
+            value=300,
+            step=1,
+            help="Fixed age assigned to Customer Opening Balance records"
+        )
+        
         st.markdown("---")
         
         # Invoice number configuration
@@ -157,7 +166,7 @@ def main():
                         # Step 1: Clean and filter data
                         st.info("Step 1/3: Cleaning and filtering data...")
                         df_filtered = data_processor.filter_overdue(df_raw)
-                        df_cleaned = data_processor.clean_data(df_filtered)
+                        df_cleaned = data_processor.clean_data(df_filtered, opening_balance_age=opening_balance_days)
                         
                         # Step 2: Calculate interest
                         st.info("Step 2/3: Calculating interest...")

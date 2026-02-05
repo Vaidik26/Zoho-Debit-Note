@@ -63,12 +63,13 @@ class DataProcessor:
         df[column_name] = pd.to_numeric(df[column_name], errors='coerce').fillna(fill_na)
         return df
     
-    def clean_age_column(self, df: pd.DataFrame) -> pd.DataFrame:
+    def clean_age_column(self, df: pd.DataFrame, opening_balance_age: int = 300) -> pd.DataFrame:
         """
         Clean Age column by removing 'Days' text and converting to numeric
         
         Args:
             df: DataFrame
+            opening_balance_age: Age to set for Customer Opening Balance rows (default: 300)
             
         Returns:
             DataFrame with cleaned Age column
@@ -81,17 +82,18 @@ class DataProcessor:
         )
         df['Age'] = pd.to_numeric(df['Age'], errors='coerce')
         
-        # For Customer Opening Balance rows, set Age to 300
-        df.loc[df['Type'] == 'Customer Opening Balance', 'Age'] = 300
+        # For Customer Opening Balance rows, set Age to configurable value
+        df.loc[df['Type'] == 'Customer Opening Balance', 'Age'] = opening_balance_age
         
         return df
     
-    def clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
+    def clean_data(self, df: pd.DataFrame, opening_balance_age: int = 300) -> pd.DataFrame:
         """
         Perform all cleaning operations on the DataFrame
         
         Args:
             df: Raw filtered DataFrame
+            opening_balance_age: Age to set for Customer Opening Balance rows
             
         Returns:
             Cleaned DataFrame
@@ -103,8 +105,8 @@ class DataProcessor:
         df = self.clean_currency_column(df, 'Balance Due', fill_na=0)
         df = self.clean_currency_column(df, 'Amount', fill_na=0)
         
-        # Clean Age column
-        df = self.clean_age_column(df)
+        # Clean Age column with configurable opening balance age
+        df = self.clean_age_column(df, opening_balance_age)
         
         return df
     
