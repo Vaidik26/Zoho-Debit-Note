@@ -171,9 +171,8 @@ def main():
                         st.session_state['df_interest'] = df_with_interest
                         st.session_state['df_debit_notes'] = df_debit_notes
                         st.session_state['processed'] = True
-                        st.session_state['current_tab'] = 1  # Move to Results tab
                         
-                        st.success("✅ Processing complete! Click 'Next: View Results' below.")
+                        st.success("✅ Processing complete! Switch to the **Results** tab to view details.")
                         st.balloons()
                 
             except Exception as e:
@@ -182,14 +181,10 @@ def main():
         else:
             st.info("👆 Please upload an Excel file to begin.")
         
-        # Navigation button
-        st.markdown("---")
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col3:
-            if 'processed' in st.session_state and st.session_state['processed']:
-                if st.button("Next: View Results ➡️", type="primary", use_container_width=True):
-                    st.session_state['current_tab'] = 1
-                    st.rerun()
+        # Navigation hint
+        if 'processed' in st.session_state and st.session_state['processed']:
+            st.markdown("---")
+            st.info("✅ **Data processed successfully!** → Switch to the **📊 Results** tab above to view details.")
     
     with tab2:
         st.markdown('<div class="section-header">Processing Results</div>', unsafe_allow_html=True)
@@ -276,17 +271,9 @@ def main():
                 st.info(f"Showing all {len(df_debit_notes)} records")
                 st.dataframe(df_debit_notes, use_container_width=True)
             
-            # Navigation buttons
+            # Navigation hint
             st.markdown("---")
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col1:
-                if st.button("⬅️ Back to Upload", use_container_width=True):
-                    st.session_state['current_tab'] = 0
-                    st.rerun()
-            with col3:
-                if st.button("Next: Download ➡️", type="primary", use_container_width=True):
-                    st.session_state['current_tab'] = 2
-                    st.rerun()
+            st.info("📥 **Ready to download?** → Switch to the **📥 Download** tab above to get your Excel file.")
         
         else:
             st.info("👈 Please upload and process data in the 'Upload & Process' tab first.")
@@ -329,21 +316,14 @@ def main():
                 st.info(f"**File Format:** Excel (.xlsx)")
                 st.info(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             
-            # Navigation buttons
+            # Clear data option
             st.markdown("---")
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col1:
-                if st.button("⬅️ Back to Results", use_container_width=True):
-                    st.session_state['current_tab'] = 1
-                    st.rerun()
-            with col3:
-                if st.button("🔄 Start New Process", type="secondary", use_container_width=True):
-                    # Clear session state
-                    for key in ['df_interest', 'df_debit_notes', 'processed']:
-                        if key in st.session_state:
-                            del st.session_state[key]
-                    st.session_state['current_tab'] = 0
-                    st.rerun()
+            st.subheader("🔄 Start New Process")
+            if st.button("Clear Data & Upload New File", type="secondary", use_container_width=True):
+                # Clear session state
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                st.success("✅ Data cleared! Switch to the **Upload & Process** tab to start fresh.")
         
         else:
             st.info("👈 Please upload and process data in the 'Upload & Process' tab first.")
