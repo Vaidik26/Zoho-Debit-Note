@@ -37,7 +37,7 @@ class DataProcessor:
         Returns:
             DataFrame with duplicate columns removed
         """
-        columns_to_drop = ['Sale person']
+        columns_to_drop = ['Sales person']
         df = df.drop(columns=[col for col in columns_to_drop if col in df.columns])
         return df
     

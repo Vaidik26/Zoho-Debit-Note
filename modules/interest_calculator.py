@@ -126,7 +126,7 @@ class InterestCalculator:
             'per day interst%',
             'working interst in %',
             'interest amount',
-            'Sales person'
+            'Sale Person'
         ]
         
         df_output = df[final_columns]

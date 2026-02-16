@@ -125,10 +125,40 @@ def main():
             help="Starting number for invoice sequence"
         )
     
-    # Main content area
-    tab1, tab2, tab3 = st.tabs(["📤 Upload & Process", "📊 Results", "📥 Download"])
+    # --- NAVIGATION SETUP ---
+    steps = ["Upload & Process", "Results", "Download"]
     
-    with tab1:
+    # Initialize current step in session state if not present
+    if 'current_step' not in st.session_state:
+        st.session_state.current_step = steps[0]
+    
+    # Navigation Component (Horizontal Radio)
+    # Using columns to center or style it if needed, or just plain st.radio
+    st.write("### 📍 Progress")
+    
+    # Callback to handle direct clicks on the radio button
+    def update_step():
+        st.session_state.current_step = st.session_state.nav_radio
+        
+    selection = st.radio(
+        "Go to step:",
+        steps,
+        index=steps.index(st.session_state.current_step),
+        horizontal=True,
+        key="nav_radio",
+        on_change=update_step,
+        label_visibility="collapsed"
+    )
+
+    st.markdown("---")
+    
+    # Helper function for navigation buttons
+    def set_step(step_name):
+        st.session_state.current_step = step_name
+        st.session_state.nav_radio = step_name
+    
+    # --- STEP 1: UPLOAD & PROCESS ---
+    if st.session_state.current_step == "Upload & Process":
         st.markdown('<div class="section-header">Upload Raw Data</div>', unsafe_allow_html=True)
         
         uploaded_file = st.file_uploader(
@@ -181,7 +211,7 @@ def main():
                         st.session_state['df_debit_notes'] = df_debit_notes
                         st.session_state['processed'] = True
                         
-                        st.success("✅ Processing complete! Switch to the **Results** tab to view details.")
+                        st.success("✅ Processing complete! Click **Next** to view results.")
                         st.balloons()
                 
             except Exception as e:
@@ -190,12 +220,15 @@ def main():
         else:
             st.info("👆 Please upload an Excel file to begin.")
         
-        # Navigation hint
+        # Navigation button (Conditional)
         if 'processed' in st.session_state and st.session_state['processed']:
             st.markdown("---")
-            st.info("✅ **Data processed successfully!** → Switch to the **📊 Results** tab above to view details.")
-    
-    with tab2:
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col3:
+                st.button("Next: View Results ➡️", type="primary", use_container_width=True, on_click=set_step, args=("Results",))
+
+    # --- STEP 2: RESULTS ---
+    elif st.session_state.current_step == "Results":
         st.markdown('<div class="section-header">Processing Results</div>', unsafe_allow_html=True)
         
         if 'processed' in st.session_state and st.session_state['processed']:
@@ -206,65 +239,17 @@ def main():
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
-                st.metric(
-                    "Total Transactions",
-                    f"{len(df_interest):,}",
-                    help="Number of overdue transactions"
-                )
-            
+                st.metric("Total Transactions", f"{len(df_interest):,}")
             with col2:
-                st.metric(
-                    "Total Interest",
-                    f"₹{df_interest['interest amount'].sum():,.2f}",
-                    help="Total interest amount calculated"
-                )
-            
+                st.metric("Total Interest", f"₹{df_interest['interest amount'].sum():,.2f}")
             with col3:
-                st.metric(
-                    "Debit Notes",
-                    f"{len(df_debit_notes):,}",
-                    help="Number of debit notes generated"
-                )
-            
+                st.metric("Debit Notes", f"{len(df_debit_notes):,}")
             with col4:
-                st.metric(
-                    "Avg Interest/Note",
-                    f"₹{df_debit_notes['Total'].mean():,.2f}",
-                    help="Average interest per debit note"
-                )
+                st.metric("Avg Interest/Note", f"₹{df_debit_notes['Total'].mean():,.2f}")
             
             st.markdown("---")
-            
-            # Interest calculation details
-            st.subheader("📈 Interest Calculation Details")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**Interest Statistics**")
-                stats_df = pd.DataFrame({
-                    'Metric': ['Total Interest', 'Average Interest', 'Max Interest', 'Min Interest'],
-                    'Amount (₹)': [
-                        f"{df_interest['interest amount'].sum():,.2f}",
-                        f"{df_interest['interest amount'].mean():,.2f}",
-                        f"{df_interest['interest amount'].max():,.2f}",
-                        f"{df_interest['interest amount'].min():,.2f}"
-                    ]
-                })
-                st.dataframe(stats_df, use_container_width=True, hide_index=True)
-            
-            with col2:
-                st.markdown("**Top 5 Customers by Interest**")
-                top_customers = df_interest.groupby('Customer Name')['interest amount'].sum().sort_values(ascending=False).head(5)
-                top_df = pd.DataFrame({
-                    'Customer': top_customers.index,
-                    'Interest (₹)': [f"{v:,.2f}" for v in top_customers.values]
-                })
-                st.dataframe(top_df, use_container_width=True, hide_index=True)
             
             # Data tables
-            st.markdown("---")
-            
             view_option = st.radio(
                 "Select data to view:",
                 ["Interest Calculations", "Debit Notes"],
@@ -280,14 +265,22 @@ def main():
                 st.info(f"Showing all {len(df_debit_notes)} records")
                 st.dataframe(df_debit_notes, use_container_width=True)
             
-            # Navigation hint
+            # Navigation buttons
             st.markdown("---")
-            st.info("📥 **Ready to download?** → Switch to the **📥 Download** tab above to get your Excel file.")
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col1:
+                st.button("⬅️ Back to Upload", use_container_width=True, on_click=set_step, args=("Upload & Process",))
+            with col3:
+                st.button("Next: Download ➡️", type="primary", use_container_width=True, on_click=set_step, args=("Download",))
         
         else:
-            st.info("👈 Please upload and process data in the 'Upload & Process' tab first.")
-    
-    with tab3:
+            st.warning("⚠️ No data processed yet.")
+            if st.button("⬅️ Go to Upload", type="primary"):
+                set_step("Upload & Process")
+                st.rerun()
+
+    # --- STEP 3: DOWNLOAD ---
+    elif st.session_state.current_step == "Download":
         st.markdown('<div class="section-header">Download Results</div>', unsafe_allow_html=True)
         
         if 'processed' in st.session_state and st.session_state['processed']:
@@ -325,17 +318,26 @@ def main():
                 st.info(f"**File Format:** Excel (.xlsx)")
                 st.info(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             
-            # Clear data option
+            # Navigation / Reset
             st.markdown("---")
-            st.subheader("🔄 Start New Process")
-            if st.button("Clear Data & Upload New File", type="secondary", use_container_width=True):
-                # Clear session state
-                for key in list(st.session_state.keys()):
-                    del st.session_state[key]
-                st.success("✅ Data cleared! Switch to the **Upload & Process** tab to start fresh.")
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col1:
+                st.button("⬅️ Back to Results", use_container_width=True, on_click=set_step, args=("Results",))
+            
+            # Clear data logic
+            with col3:
+                 def clear_data():
+                    for key in list(st.session_state.keys()):
+                        del st.session_state[key]
+                    st.session_state.current_step = "Upload & Process"
+                 
+                 st.button("🔄 Start New Process", type="secondary", use_container_width=True, on_click=clear_data)
         
         else:
-            st.info("👈 Please upload and process data in the 'Upload & Process' tab first.")
+            st.warning("⚠️ No data processed yet.")
+            if st.button("⬅️ Go to Upload", type="primary"):
+                set_step("Upload & Process")
+                st.rerun()
 
 if __name__ == "__main__":
     main()

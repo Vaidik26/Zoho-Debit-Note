@@ -36,7 +36,7 @@ class DebitNoteGenerator:
             'Customer Name',
             'Area Name',
             'Region',
-            'Sales person'
+            'Sale Person'
         ]).agg({
             'interest amount': 'sum'
         }).reset_index()
@@ -136,7 +136,7 @@ class DebitNoteGenerator:
             'Invoice Date', 'Invoice No.', 'Invoice Status', 'Accounts Receivable',
             'Customer ID', 'Customer Name', 'Is Inclusive Tax', 'SubTotal', 'Total',
             'Balance', 'Notes', 'Invoice Type', 'Location Name', 'Item Desc',
-            'Quantity', 'Item Total', 'Item Price', 'Sales person', 'Item Type',
+            'Quantity', 'Item Total', 'Item Price', 'Sale Person', 'Item Type',
             'Reason for issuing Debit Note', 'Account', 'Line Item Location Name',
             'Supply Type', 'CF.Bill Type'
         ]
