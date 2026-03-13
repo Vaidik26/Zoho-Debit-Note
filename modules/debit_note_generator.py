@@ -69,27 +69,37 @@ class DebitNoteGenerator:
         Returns:
             DataFrame with debit note fields
         """
-        df['Description'] = 'OD Charges Dec-2025'
         df['Invoice Status'] = 'Open'
         df['Accounts Receivable'] = 'Accounts Receivable'
         df['Is Inclusive Tax'] = True
         df['SubTotal'] = df['Total']
         df['Balance'] = df['Total']
-        df['Notes'] = 'OD Charges Dec-2025'
+        df['Payment Terms'] = 120
+        df['Payment Terms Label'] = 'Net 120'
+        df['Notes'] = 'OD Charges Jan-2025'
         df['Invoice Type'] = 'Debit Notes'
         df['Location Name'] = 'Head Office'
-        df['Item Desc'] = 'OD Charges Dec-2025'
+        df['Item Desc'] = 'OD Charges Jan-2025'
         df['Quantity'] = 1
         df['Item Total'] = df['Total']
         df['Item Price'] = df['Total']
         df['Item Type'] = 'service'
+        df['Reference Invoice Type'] = ''
         df['Reason for issuing Debit Note'] = 'Others'
-        df['Account'] = 'OD CHARGES'
+        df['Account'] = 'Sales'
         df['Line Item Location Name'] = 'HEAD OFFICE'
         df['Supply Type'] = 'Out of Scope'
         df['CF.Bill Type'] = 'Credit'
-        df['Invoice Date'] = datetime.now().strftime('%Y-%m-%d')
-        df['Invoice No.'] = ''
+        
+        # Invoice Date (Today)
+        today = datetime.now()
+        df['Invoice Date'] = today.strftime('%d-%m-%Y')
+        
+        # Due Date (120 days after Invoice Date)
+        due_date = today + pd.Timedelta(days=120)
+        df['Due Date'] = due_date.strftime('%d-%m-%Y')
+        
+        df['Invoice Number'] = ''
         
         return df
     
@@ -103,7 +113,7 @@ class DebitNoteGenerator:
         Returns:
             DataFrame with invoice numbers
         """
-        df['Invoice No.'] = [
+        df['Invoice Number'] = [
             f"{self.invoice_prefix}{str(i + self.starting_number).zfill(6)}"
             for i in range(len(df))
         ]
@@ -111,15 +121,15 @@ class DebitNoteGenerator:
     
     def rename_customer_column(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Rename Customer Number to Customer ID
+        No-op rename (keeping Customer Number)
         
         Args:
             df: DataFrame
             
         Returns:
-            DataFrame with renamed column
+            DataFrame
         """
-        df = df.rename(columns={'Customer Number': 'Customer ID'})
+        # The user wants 'Customer Number' which is already the column name
         return df
     
     def select_final_columns(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -132,19 +142,22 @@ class DebitNoteGenerator:
         Returns:
             DataFrame with final column selection
         """
+        # Rename Sale Person to Sales person for the final output as per final.csv
+        df = df.rename(columns={'Sale Person': 'Sales person'})
+        
         cols_to_keep = [
-            'Invoice Date', 'Invoice No.', 'Invoice Status', 'Accounts Receivable',
-            'Customer ID', 'Customer Name', 'Is Inclusive Tax', 'SubTotal', 'Total',
-            'Balance', 'Notes', 'Invoice Type', 'Location Name', 'Item Desc',
-            'Quantity', 'Item Total', 'Item Price', 'Sale Person', 'Item Type',
-            'Reason for issuing Debit Note', 'Account', 'Line Item Location Name',
-            'Supply Type', 'CF.Bill Type'
+            'Invoice Date', 'Invoice Number', 'Invoice Status', 'Accounts Receivable',
+            'Customer Name', 'Customer Number', 'Due Date', 'SubTotal', 'Total',
+            'Balance', 'Payment Terms', 'Payment Terms Label', 'Notes', 'Invoice Type',
+            'Item Desc', 'Quantity', 'Item Total', 'Item Price', 'Sales person',
+            'Item Type', 'Reference Invoice Type', 'Reason for issuing Debit Note',
+            'Account', 'Supply Type'
         ]
         
         df_final = df[cols_to_keep].copy()
         
-        # Sort by Customer ID
-        df_final = df_final.sort_values(by='Customer ID').reset_index(drop=True)
+        # Sort by Customer Number
+        df_final = df_final.sort_values(by='Customer Number').reset_index(drop=True)
         
         return df_final
     
