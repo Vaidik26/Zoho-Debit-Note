@@ -69,6 +69,11 @@ class DebitNoteGenerator:
         Returns:
             DataFrame with debit note fields
         """
+        # Get current month-year for description
+        now = datetime.now()
+        month_year = now.strftime('%b-%Y') # e.g., 'Mar-2026'
+        description = f"OD Charges {month_year}"
+
         df['Invoice Status'] = 'Open'
         df['Accounts Receivable'] = 'Accounts Receivable'
         df['Is Inclusive Tax'] = True
@@ -76,10 +81,10 @@ class DebitNoteGenerator:
         df['Balance'] = df['Total']
         df['Payment Terms'] = 120
         df['Payment Terms Label'] = 'Net 120'
-        df['Notes'] = 'OD Charges Jan-2025'
+        df['Notes'] = description
         df['Invoice Type'] = 'Debit Notes'
         df['Location Name'] = 'Head Office'
-        df['Item Desc'] = 'OD Charges Jan-2025'
+        df['Item Desc'] = description
         df['Quantity'] = 1
         df['Item Total'] = df['Total']
         df['Item Price'] = df['Total']
@@ -92,11 +97,10 @@ class DebitNoteGenerator:
         df['CF.Bill Type'] = 'Credit'
         
         # Invoice Date (Today)
-        today = datetime.now()
-        df['Invoice Date'] = today.strftime('%d-%m-%Y')
+        df['Invoice Date'] = now.strftime('%d-%m-%Y')
         
         # Due Date (120 days after Invoice Date)
-        due_date = today + pd.Timedelta(days=120)
+        due_date = now + pd.Timedelta(days=120)
         df['Due Date'] = due_date.strftime('%d-%m-%Y')
         
         df['Invoice Number'] = ''
