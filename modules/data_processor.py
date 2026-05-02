@@ -108,6 +108,12 @@ class DataProcessor:
         # Clean Age column with configurable opening balance age
         df = self.clean_age_column(df, opening_balance_age)
         
+        # Ensure key columns are consistently strings to prevent type errors during sorting/grouping
+        cols_to_stringify = ['Customer Number', 'Customer Name', 'Area Name', 'Region', 'Sale Person']
+        for col in cols_to_stringify:
+            if col in df.columns:
+                df[col] = df[col].astype(str).str.strip().replace('nan', '')
+        
         return df
     
     def sort_by_customer(self, df: pd.DataFrame) -> pd.DataFrame:
